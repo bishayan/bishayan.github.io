@@ -1,50 +1,411 @@
-<!DOCTYPE HTML>
-<!--
-	Aerial by HTML5 UP
-	html5up.net | @n33co
-	Free for personal and commercial use under the CCA 3.0 license (html5up.net/license)
--->
-<html>
-	<head>
-		<title>Bishayan</title>
-		<meta http-equiv="content-type" content="text/html; charset=utf-8" />
-		<meta name="description" content="" />
-		<meta name="keywords" content="" />
-		<!--[if lte IE 8]><script src="css/ie/html5shiv.js"></script><![endif]-->
-		<script src="js/skel.min.js"></script>
-		<script src="js/init.js"></script>
-		<noscript>
-			<link rel="stylesheet" href="css/skel.css" />
-			<link rel="stylesheet" href="css/style.css" />
-			<link rel="stylesheet" href="css/style-wide.css" />
-			<link rel="stylesheet" href="css/style-noscript.css" />
-		</noscript>
-		<!--[if lte IE 9]><link rel="stylesheet" href="css/ie/v9.css" /><![endif]-->
-		<!--[if lte IE 8]><link rel="stylesheet" href="css/ie/v8.css" /><![endif]-->
-	</head>
-	<body class="loading">
-		<div id="wrapper">
-			<div id="bg"></div>
-			<div id="overlay"></div>
-			<div id="main">
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Lazarus</title>
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;400;700&display=swap" rel="stylesheet">
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
-				<!-- Header -->
-					<header id="header">
-						<h1>Bishayan Banerjee</h1>
-						<p>Deeksha North &nbsp;&bull;&nbsp; Grade 12 student &nbsp;&bull;&nbsp; Never asked for this</p>
-						<nav>
-							<ul>
-								<li><a href="https://twitter.com/bishlemma" target="blank" class="icon fa-twitter"><span class="label">Twitter</span></a></li>
-								<!-- <li><a href="#" class="icon fa-facebook"><span class="label">Facebook</span></a></li> -->
-								<!-- <li><a href="#" class="icon fa-dribbble"><span class="label">Dribbble</span></a></li> -->
-								<li><a href="https://github.com/bishayan" target="blank" class="icon fa-github"><span class="label">Github</span></a></li>
-								<li><a href="https://mail.google.com/mail/u/0/#inbox?compose=GTvVlcSPFdPmrsXrpWjJlRPjdFLvPrTbdtrXGsdWrNfTvZrGhSCBdplSNbSXbwcNJtsfqHGXngwJD" target="blank" class="icon fa-envelope-o"><span class="label">Email</span></a></li>
-							</ul>
-						</nav>
-					</header>
-					
-				
-			</div>
-		</div>
-	</body>
+  :root {
+    --bg: #0c0c0c;
+    --text: #c8c8c8;
+    --green: #39ff6e;
+    --green-dim: #1a5c30;
+    --yellow: #f0c040;
+    --red: #ff4444;
+    --muted: #444;
+    --cursor-color: #39ff6e;
+  }
+
+  html, body {
+    height: 100%;
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 14px;
+    line-height: 1.6;
+    overflow: hidden;
+  }
+
+  #terminal {
+    height: 100vh;
+    display: flex;
+    flex-direction: column;
+    padding: 0;
+  }
+
+  /* Top bar */
+  #topbar {
+    background: #111;
+    border-bottom: 1px solid #1e1e1e;
+    padding: 8px 16px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-shrink: 0;
+  }
+
+  #topbar .title {
+    color: var(--green);
+    font-weight: 700;
+    letter-spacing: 3px;
+    font-size: 13px;
+  }
+
+  #topbar .meta {
+    color: var(--muted);
+    font-size: 11px;
+    letter-spacing: 1px;
+  }
+
+  #topbar .meta span { color: var(--yellow); }
+
+  /* Output area */
+  #output {
+    flex: 1;
+    overflow-y: auto;
+    padding: 16px 20px;
+    scrollbar-width: thin;
+    scrollbar-color: #222 transparent;
+  }
+
+  #output::-webkit-scrollbar { width: 4px; }
+  #output::-webkit-scrollbar-thumb { background: #222; }
+
+  .line {
+    display: block;
+    white-space: pre-wrap;
+    word-break: break-word;
+    animation: appear 0.05s ease both;
+  }
+
+  @keyframes appear {
+    from { opacity: 0; }
+    to   { opacity: 1; }
+  }
+
+  .line.system  { color: var(--muted); }
+  .line.prompt  { color: var(--green); }
+  .line.user    { color: #fff; }
+  .line.bot     { color: var(--text); }
+  .line.bot-tag { color: var(--green); font-weight: 700; }
+  .line.error   { color: var(--red); }
+  .line.info    { color: var(--yellow); }
+  .line.empty   { color: transparent; user-select: none; }
+
+  /* Typewriter effect for bot responses */
+  .typewriter { display: inline; }
+
+  /* Input row */
+  #inputbar {
+    border-top: 1px solid #1a1a1a;
+    padding: 10px 20px;
+    display: flex;
+    align-items: center;
+    gap: 0;
+    flex-shrink: 0;
+    background: #0c0c0c;
+  }
+
+  #prompt-label {
+    color: var(--green);
+    font-weight: 700;
+    white-space: nowrap;
+    user-select: none;
+    margin-right: 8px;
+  }
+
+  #input {
+    flex: 1;
+    background: transparent;
+    border: none;
+    outline: none;
+    color: #fff;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 14px;
+    caret-color: var(--cursor-color);
+  }
+
+  #input::placeholder { color: var(--muted); }
+
+  /* Mode bar */
+  #modebar {
+    background: #0f0f0f;
+    border-top: 1px solid #1a1a1a;
+    padding: 6px 20px;
+    display: flex;
+    gap: 6px;
+    flex-shrink: 0;
+    align-items: center;
+  }
+
+  #modebar span {
+    font-size: 10px;
+    color: var(--muted);
+    letter-spacing: 1px;
+    margin-right: 6px;
+  }
+
+  .mbtn {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    letter-spacing: 1px;
+    padding: 3px 10px;
+    background: transparent;
+    border: 1px solid #222;
+    color: var(--muted);
+    cursor: pointer;
+    transition: all 0.15s;
+    text-transform: uppercase;
+  }
+
+  .mbtn:hover { border-color: var(--green); color: var(--green); }
+  .mbtn.active { border-color: var(--green); color: var(--green); background: rgba(57,255,110,0.06); }
+  .mbtn.pipeline-btn { border-color: #222; color: var(--muted); }
+  .mbtn.pipeline-btn.on { border-color: var(--yellow); color: var(--yellow); background: rgba(240,192,64,0.06); }
+
+  .sep { color: #222; margin: 0 4px; user-select: none; }
+
+  /* Blinking cursor for thinking */
+  .blink {
+    display: inline-block;
+    width: 8px;
+    height: 14px;
+    background: var(--green);
+    vertical-align: middle;
+    animation: blink 1s step-end infinite;
+    margin-left: 2px;
+  }
+
+  @keyframes blink {
+    0%, 100% { opacity: 1; }
+    50%       { opacity: 0; }
+  }
+</style>
+</head>
+<body>
+
+<div id="terminal">
+
+  <div id="topbar">
+    <div class="title">LAZARUS</div>
+    <div class="meta">model: <span>lazarus-core</span> &nbsp;|&nbsp; ollama: <span>localhost:11434</span></div>
+  </div>
+
+  <div id="output"></div>
+
+  <div id="inputbar">
+    <div id="prompt-label">bish@lazarus:~$</div>
+    <input id="input" type="text" autocomplete="off" spellcheck="false" autofocus placeholder="type a message...">
+  </div>
+
+  <div id="modebar">
+    <span>MODE:</span>
+    <button class="mbtn active" data-mode="normal">normal</button>
+    <button class="mbtn" data-mode="deep">deep</button>
+    <button class="mbtn" data-mode="creative">creative</button>
+    <button class="mbtn" data-mode="strategy">strategy</button>
+    <button class="mbtn" data-mode="debate">debate</button>
+    <div class="sep">|</div>
+    <button class="mbtn pipeline-btn" id="pipBtn">pipeline: off</button>
+  </div>
+
+</div>
+
+<script>
+  const output   = document.getElementById("output");
+  const inputEl  = document.getElementById("input");
+  const pipBtn   = document.getElementById("pipBtn");
+
+  let currentMode = "normal";
+  let pipeline    = false;
+  let busy        = false;
+  let history     = [];   // command history
+  let histIdx     = -1;
+
+  // Boot messages
+  const boot = [
+    { cls: "system", text: "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━" },
+    { cls: "system", text: "  LAZARUS v8  //  self-critiquing AI shell" },
+    { cls: "system", text: "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━" },
+    { cls: "system", text: "" },
+    { cls: "info",   text: "  model    : lazarus-core" },
+    { cls: "info",   text: "  backend  : ollama @ localhost:11434" },
+    { cls: "info",   text: "  status   : ready" },
+    { cls: "system", text: "" },
+    { cls: "system", text: "  type /help for commands. press Enter to send." },
+    { cls: "system", text: "" },
+  ];
+
+  boot.forEach((b, i) => setTimeout(() => printLine(b.text, b.cls), i * 40));
+
+  function printLine(text, cls = "bot") {
+    const el = document.createElement("span");
+    el.className = `line ${cls}`;
+    el.textContent = text === "" ? " " : text;
+    if (text === "") el.className = "line empty";
+    output.appendChild(el);
+    output.scrollTop = output.scrollHeight;
+  }
+
+  function printBot(text) {
+    // Tag
+    printLine("lazarus:", "bot-tag");
+
+    // Typewrite the response line by line
+    const lines = text.split("\n");
+    lines.forEach((line, i) => {
+      setTimeout(() => {
+        printLine("  " + line, "bot");
+        output.scrollTop = output.scrollHeight;
+      }, i * 18);
+    });
+
+    setTimeout(() => {
+      printLine("", "empty");
+      output.scrollTop = output.scrollHeight;
+    }, lines.length * 18 + 50);
+  }
+
+  function showThinking() {
+    const el = document.createElement("span");
+    el.className = "line system";
+    el.id = "thinking";
+    el.innerHTML = 'lazarus: <span class="blink"></span>';
+    output.appendChild(el);
+    output.scrollTop = output.scrollHeight;
+  }
+
+  function hideThinking() {
+    const el = document.getElementById("thinking");
+    if (el) el.remove();
+  }
+
+  // Mode buttons
+  document.querySelectorAll(".mbtn[data-mode]").forEach(btn => {
+    btn.addEventListener("click", () => {
+      document.querySelectorAll(".mbtn[data-mode]").forEach(b => b.classList.remove("active"));
+      btn.classList.add("active");
+      currentMode = btn.dataset.mode;
+      printLine(`-- mode set to: ${currentMode}`, "info");
+      printLine("", "empty");
+    });
+  });
+
+  // Pipeline toggle
+  pipBtn.addEventListener("click", () => {
+    pipeline = !pipeline;
+    pipBtn.textContent = `pipeline: ${pipeline ? "on" : "off"}`;
+    pipBtn.classList.toggle("on", pipeline);
+    printLine(`-- pipeline: ${pipeline ? "on (draft → critique → refine)" : "off (fast mode)"}`, "info");
+    printLine("", "empty");
+  });
+
+  // Input handler
+  inputEl.addEventListener("keydown", async (e) => {
+    if (e.key === "ArrowUp") {
+      e.preventDefault();
+      if (histIdx < history.length - 1) {
+        histIdx++;
+        inputEl.value = history[histIdx];
+      }
+      return;
+    }
+    if (e.key === "ArrowDown") {
+      e.preventDefault();
+      if (histIdx > 0) {
+        histIdx--;
+        inputEl.value = history[histIdx];
+      } else {
+        histIdx = -1;
+        inputEl.value = "";
+      }
+      return;
+    }
+
+    if (e.key !== "Enter") return;
+
+    const text = inputEl.value.trim();
+    if (!text || busy) return;
+
+    inputEl.value = "";
+    histIdx = -1;
+    history.unshift(text);
+
+    // Echo user input
+    printLine(`bish@lazarus:~$ ${text}`, "prompt");
+
+    // Built-in commands
+    if (text === "/help") {
+      [
+        "",
+        "  /normal   /deep   /creative   /strategy   /debate",
+        "            switch response mode",
+        "",
+        "  /pipeline  toggle draft-critique-refine (slower, better)",
+        "  /clear     clear the terminal",
+        "  /mode      show current mode",
+        "",
+        "  arrow up/down  navigate command history",
+        "",
+      ].forEach(l => printLine(l, "system"));
+      return;
+    }
+
+    if (text === "/clear") {
+      output.innerHTML = "";
+      return;
+    }
+
+    if (text === "/mode") {
+      printLine(`  mode: ${currentMode} | pipeline: ${pipeline ? "on" : "off"}`, "info");
+      printLine("", "empty");
+      return;
+    }
+
+    const modeMap = { "/normal": "normal", "/deep": "deep", "/creative": "creative", "/strategy": "strategy", "/debate": "debate" };
+    if (modeMap[text]) {
+      currentMode = modeMap[text];
+      document.querySelectorAll(".mbtn[data-mode]").forEach(b => {
+        b.classList.toggle("active", b.dataset.mode === currentMode);
+      });
+      printLine(`  mode set to: ${currentMode}`, "info");
+      printLine("", "empty");
+      return;
+    }
+
+    // Send to Flask
+    busy = true;
+    inputEl.disabled = true;
+    showThinking();
+
+    try {
+      const res = await fetch("/chat", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ message: text, mode: currentMode, pipeline })
+      });
+      const data = await res.json();
+      hideThinking();
+      const isErr = data.response.startsWith("Error");
+      if (isErr) {
+        printLine(`error: ${data.response}`, "error");
+        printLine("", "empty");
+      } else {
+        printBot(data.response);
+      }
+    } catch (err) {
+      hideThinking();
+      printLine("error: could not reach Flask server. is app.py running?", "error");
+      printLine("", "empty");
+    }
+
+    busy = false;
+    inputEl.disabled = false;
+    inputEl.focus();
+  });
+</script>
+</body>
 </html>
